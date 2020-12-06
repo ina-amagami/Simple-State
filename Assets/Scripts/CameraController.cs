@@ -4,17 +4,21 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-	private Transform followTarget = null;
+	private Player player = null;
 
 	private void Start()
 	{
-		followTarget = GameObject.FindGameObjectWithTag(Player.Tag).transform;
+		player = GameObject.FindGameObjectWithTag(Player.Tag).GetComponent<Player>();
 	}
 
 	private void Update()
 	{
+		if (player.IsDead)
+		{
+			return;
+		}
 		var pos = transform.position;
-		pos.x = followTarget.position.x;
+		pos.x = player.transform.position.x;
 		transform.position = pos;
 	}
 }

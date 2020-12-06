@@ -1,37 +1,50 @@
 ﻿using UnityEngine;
 
-public class Player : MonoBehaviour
+public partial class Player
 {
-    public const string Tag = "Player";
+	// ステートのインスタンス
+	private static readonly StateStanding stateStanding = new StateStanding();
+	private static readonly StateJumping stateJumping = new StateJumping();
+	private static readonly StateDucking stateDucking = new StateDucking();
+	private static readonly StateDiving stateDiving = new StateDiving();
+	private static readonly StateDead stateDead = new StateDead();
 
-    [Header("スクロール速度")]
-    [SerializeField] private float moveSpeed = 1f;
+	public bool IsDead => currentState is StateDead;
 
-    private Material materialInstance = null;
+	/// <summary>
+	/// 現在のステート
+	/// </summary>
+	private PlayerStateBase currentState = stateStanding;
 
-    private void Start()
-    {
-        materialInstance = GetComponent<MeshRenderer>().material;
-    }
+	// Start()から呼ばれる
+	private void OnStart()
+	{
+		currentState.OnEnter(this, null);
+	}
 
-    private void Update()
-    {
-        // 自動で右方向に移動
-        transform.position += Vector3.right * moveSpeed * Time.deltaTime;
-    }
+	// Update()から呼ばれる
+	private void OnUpdate()
+	{
+		currentState.OnUpdate(this);
+	}
 
-    private void OnTriggerEnter(Collider other)
-    {
-        materialInstance.color = Color.red;
-    }
+	// ステート変更
+	private void ChangeState(PlayerStateBase nextState)
+	{
+		currentState.OnExit(this, nextState);
+		nextState.OnEnter(this, currentState);
+		currentState = nextState;
+	}
 
-    private void OnTriggerExit(Collider other)
-    {
-        materialInstance.color = Color.blue;
-    }
+	// 死亡した時に呼ばれる
+	private void OnDeath()
+	{
+		ChangeState(stateDead);
+	}
 
-    private void OnDestroy()
-    {
-        Destroy(materialInstance);
-    }
+	// 地面との衝突
+	private void OnCollisionEnter(Collision collision)
+	{
+		ChangeState(stateStanding);
+	}
 }
